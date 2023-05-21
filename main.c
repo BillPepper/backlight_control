@@ -16,7 +16,14 @@ void warn_no_root(void) {
   }
 }
 
-void set_backlight(int percent);
+void set_backlight(int value) {
+  FILE *pFile;
+
+  pFile = fopen(brightness_file, "w");
+
+  fprintf(pFile, "%d", value);
+  fclose(pFile);
+};
 
 int get_max_brightness(void) {
   FILE *pFile;
@@ -48,7 +55,6 @@ int file_exists(char *path) {
 int main(int argc, char **argv) {
   warn_no_root();
 
-  // 2. Check if arg, brightness in percent
   if (argc != 2){
     printf("Usage: brightness_control <level in percent>\n");
     exit(1);
@@ -60,7 +66,6 @@ int main(int argc, char **argv) {
     exit(2);
   }
 
-  // x. Check if both files exist
   if (!file_exists(brightness_file)) {
     printf("Error, missing brightness file: %s\n", brightness_file);
     exit(3);
@@ -71,20 +76,15 @@ int main(int argc, char **argv) {
     exit(4);
   }
 
-  // 3. Load maximum brightness
   int max = get_max_brightness();
   if (max == 0) {
     printf("Error, no max brightness found in file\n");
     exit(5);
   }
 
-  // 4. Calculate new brightness value
   int new_brightness = max / 100 * user_value;
-
-  // 5. Save brightness to file
-  FILE *pOut = fopen(brightness_file, "w");
-  fprintf(pOut, "%d", new_brightness);
-  fclose(pOut);
+  set_backlight(new_brightness);
+  
 
   printf("Set screen brightness to %d%% (%d)\n", user_value, new_brightness);
 
