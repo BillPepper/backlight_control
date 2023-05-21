@@ -6,16 +6,14 @@
 #define max_brightness_file "max_brightness"
 
 // return 1 if user is root
-int user_is_sudo(void) {
+void warn_no_root(void) {
   __uid_t uid;
 
   uid = geteuid();
 
-  if (uid == 0){
-    return 1;
+  if (uid != 0){
+    printf("Warning, you are not root, it might not work\n"); 
   }
-
-  return 0;
 }
 
 void set_backlight(int percent);
@@ -31,9 +29,7 @@ int file_exists(char *path) {
 }
 
 int main(int argc, char **argv) {
-  if (!user_is_sudo()){
-    printf("Warning, you are not root, it might not work\n"); 
-  }
+  warn_no_root();
 
   // 2. Check if arg, brightness in percent
   if (argc != 2){
