@@ -10,19 +10,51 @@ void warn_no_root(void) {
   __uid_t uid;
 
   uid = geteuid();
-
   if (uid != 0){
     printf("Warning, you are not root, it might not work\n"); 
   }
 }
 
-void set_backlight(int value) {
+int file_exists(char *path) {
+  int status;
+  
+  status = access(path, F_OK);
+  if (status == 0){
+    return 1;
+  }
+
+  return 0;
+}
+
+int file_writable(char *path) {
+  int status;
+  
+  status = access(path, W_OK);
+  if (status == 0){
+    return 1;
+  }
+
+  return 0;
+}
+
+int set_backlight(int value) {
   FILE *pFile;
 
   pFile = fopen(brightness_file, "w");
+  if (pFile == 0) {
+    printf("Error, could not open file\n");
+    return 0;
+  }
+
+  if (!file_writable(brightness_file)) {
+    printf("Error, can't write brightness file\n");
+    return 0;
+  }
 
   fprintf(pFile, "%d", value);
   fclose(pFile);
+
+  return 1;
 };
 
 int get_max_brightness(void) {
@@ -30,7 +62,6 @@ int get_max_brightness(void) {
   int max_brightness;
 
   pFile = fopen(max_brightness_file, "r");
-
   if (pFile == 0) {
     printf("Error, could not open file\n");
     return 0;
@@ -42,26 +73,21 @@ int get_max_brightness(void) {
   return max_brightness;
 };
 
-int file_exists(char *path) {
-  int status = access(path, F_OK);
-  if (status == 0){
-    return 1;
-  }
-
-  return 0;
-
-}
-
 int main(int argc, char **argv) {
   warn_no_root();
+
+  int percent;
+  int max;
+  int new_brightness;
+  int status;
 
   if (argc != 2){
     printf("Usage: brightness_control <level in percent>\n");
     exit(1);
   }
 
-  int user_value = atoi(argv[1]);
-  if (user_value < 1 || user_value > 100){
+  percent = atoi(argv[1]);
+  if (percent < 1 || percent > 100){
     printf("Error, please enter a number between 1 and 100\n");
     exit(2);
   }
@@ -76,17 +102,20 @@ int main(int argc, char **argv) {
     exit(4);
   }
 
-  int max = get_max_brightness();
+  max = get_max_brightness();
   if (max == 0) {
     printf("Error, no max brightness found in file\n");
     exit(5);
   }
 
-  int new_brightness = max / 100 * user_value;
-  set_backlight(new_brightness);
-  
+  new_brightness = max / 100 * percent;
+  status = set_backlight(new_brightness);
+  if (status == 0) {
+    printf("Error, could not set backlight\n");
+    exit(6);
+  }
 
-  printf("Set screen brightness to %d%% (%d)\n", user_value, new_brightness);
+  printf("Set screen brightness to %d%% (%d)\n", percent, new_brightness);
 
   return 0;
 }
