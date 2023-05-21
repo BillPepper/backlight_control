@@ -5,8 +5,20 @@
 #define brightness_file "brightness"
 #define max_brightness_file "max_brightness"
 
-int user_is_sudo(void);
-void set_backlight(int);
+// return 1 if user is root
+int user_is_sudo(void) {
+  __uid_t uid;
+
+  uid = geteuid();
+
+  if (uid == 0){
+    return 1;
+  }
+
+  return 0;
+}
+
+void set_backlight(int percent);
 int get_max_backlight(void);
 int file_exists(char *path) {
   int status = access(path, F_OK);
@@ -19,10 +31,8 @@ int file_exists(char *path) {
 }
 
 int main(int argc, char **argv) {
-  // 1. Check if user is admin, exit if not
-  __uid_t userid = geteuid();
-  if (userid != 0){
-    printf("Warning, you are not root, it might not work\n");
+  if (!user_is_sudo()){
+    printf("Warning, you are not root, it might not work\n"); 
   }
 
   // 2. Check if arg, brightness in percent
@@ -70,7 +80,7 @@ int main(int argc, char **argv) {
   fprintf(pOut, "%d", new_brightness);
   fclose(pOut);
 
-  printf("End\n");
+  printf("Set screen brightness to %d%% (%d)\n", user_value, new_brightness);
 
   return 0;
 }
