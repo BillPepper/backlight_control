@@ -1,2 +1,2 @@
 all:
-	gcc main.c -o brightness_control
+	gcc main.c -o backlightctrl
