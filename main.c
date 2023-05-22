@@ -2,8 +2,8 @@
 #include <unistd.h> // for user id and file check
 #include <stdlib.h> // for atoi
 
-#define brightness_file "brightness"
-#define max_brightness_file "max_brightness"
+#define brightness_file "/sys/class/backlight/intel_backlight/brightness"
+#define max_brightness_file "/sys/class/backlight/intel_backlight/max_brightness"
 
 // return 1 if user is root
 void warn_no_root(void) {
